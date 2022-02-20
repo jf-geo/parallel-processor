@@ -6,8 +6,3 @@ Made available under a [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by
 ## Requirements
 Python 3.7+  
 Optional dependancy of tqdm  
-
-## progressbar-improvements branch  
-Improvements to make:  
-- create option for basic, no dependancies progressbar
-- get progressbar2 working if possible
