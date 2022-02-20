@@ -20,7 +20,7 @@ import sys
 from importlib.util import find_spec
 from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
-from typing import Callable, Hashable, Tuple
+from typing import Callable, Hashable, Iterable, Tuple, Union, Any
 
 
 ################################################################################
@@ -226,7 +226,10 @@ class ParallelProcessor:
     ############################################################################
 
     def add_argument(
-        self, process_id: Hashable, func_args: Tuple = None, func_kwargs: dict = None
+        self,
+        process_id: Hashable,
+        func_args: Union[Iterable, Any] = None,
+        func_kwargs: dict = None,
     ) -> None:
         """Add an argument and arguement id to the argument dictionary.
 
@@ -235,8 +238,9 @@ class ParallelProcessor:
 
         Args:
             process_id (Hashable): Process ID. Used for retrieving outputs from self.results.
-            func_args (Tuple): A tuple of args to pass to the worker function.
-            func_kwargs (dict): A dictionary of kwargs to pass to the worker function.
+            func_args Union[Iterable, Any]: Args to pass to the worker function. Can be a single value or an iterable.
+                Whatever is passed will be converted to a tuple. Default is None.
+            func_kwargs (dict): A dictionary of kwargs to pass to the worker function. Default is None.
 
         Raises:
             ValueError: Raises ValueError if process_id is already in use
@@ -248,11 +252,32 @@ class ParallelProcessor:
                 f"ParallelProcessor.add_argument: Argument ID '{process_id}' is not hashable. Argument not added."
             )
 
+        # Verify func_kwargs a dictionary, if passed
+        if func_kwargs and not type(func_kwargs) == dict:
+            raise ValueError(
+                f"ParallelProcessor.add_argument: func_kwargs must be a dictionary, not '{type(func_kwargs).__name__}'. Argument not added."
+            )
+
         # Verify func_args &/or func_kwargs are passed
         if not func_args and not func_kwargs:
             raise ValueError(
                 f"ParallelProcessor.add_argument: Neither func_args or func_kwargs passed. Argument not added."
             )
+
+        # Convert func_args to a tuple
+        if func_args and not type(func_args) == tuple:
+
+            # Manually define tuple if func_args is a string
+            if type(func_args) == str:
+                func_args = (func_args,)
+
+            # Cast to tuple if func_args is iterable
+            elif hasattr(func_args, "__iter__") or hasattr(func_args, "__getitem__"):
+                func_args = tuple(func_args)
+
+            # Manually define tuple if func_args is not a string or iterable
+            else:
+                func_args = (func_args,)
 
         # Add process_id, func_args, and fun_kwargs to class instance attributes
         if not process_id in self.ids:
