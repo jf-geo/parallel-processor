@@ -71,7 +71,7 @@ class ParallelProcessor:
     >>> parallel_processor = ParallelProcessor(worker_func)
 
     >>> for i in range(4):
-    >>>     parallel_processor.add_argument(process_id=i, func_args=(i, ))
+    >>>     parallel_processor.add_argument(process_id=i, func_args=i)
 
     >>> parallel_processor.run()
     
@@ -90,10 +90,10 @@ class ParallelProcessor:
 
     >>> parallel_processor = ParallelProcessor(worker_func, threads=4)
 
-    >>> parallel_processor.add_argument(process_id=1, func_args=(1, ), func_kwargs={"letter": "a"})
-    >>> parallel_processor.add_argument(process_id=2, func_args=(2, ), func_kwargs={"letter": "b"})
-    >>> parallel_processor.add_argument(process_id=3, func_args=(3, 4), func_kwargs={"letter": "c"})
-    >>> parallel_processor.add_argument(process_id=4, func_args=(5, 6), func_kwargs={"letter": "d"})
+    >>> parallel_processor.add_argument(process_id=1, func_args=1)
+    >>> parallel_processor.add_argument(process_id=2, func_kwargs={"letter": "a"})
+    >>> parallel_processor.add_argument(process_id=3, func_args=[3, 4], func_kwargs={"letter": "b"})
+    >>> parallel_processor.add_argument(process_id=4, func_args={5, 6}, func_kwargs={"letter": "c"})
 
     >>> parallel_processor.run(progressbar=True, timeout=60)
     
@@ -109,7 +109,7 @@ class ParallelProcessor:
 
     >>> gdal.UseExceptions
 
-    >>> kwargs = {
+    >>> _kwargs = {
     >>>     "options": [
     >>>             "TILED=YES",
     >>>             "COMPRESS=DEFLATE",
@@ -130,8 +130,8 @@ class ParallelProcessor:
     >>>     id = ecw.name
     >>>     input_filename = ecw.as_posix()
     >>>     output_filename = Path(gtiff_dir).joinpath(f"{ecw.stem}.{gtiff_ext}").as_posix()
-    >>>     args = (output_filename, input_filename)
-    >>>     parallel_processor.add_argument(process_id=id, func_args=args, func_kwargs=kwargs)
+    >>>     _args = [output_filename, input_filename]
+    >>>     parallel_processor.add_argument(process_id=id, func_args=_args, func_kwargs=_kwargs)
 
     >>> parallel_processor.run(progressbar=True, timeout=60*10)
     
