@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+
+"""ParallelProcessor
+
+Requirements:
+    - pyton 3.7+
+    - tqdm (optional)
+
+This script allows the user to parallize a process using multiprocessing.Pool.
+For best results, define the function in a separate file with light dependancies
+ and import it before using it. 
+ 
+For more information and examples see ParallelProcessor.__doc__
+"""
+
 import collections
 import importlib
 
@@ -5,6 +20,21 @@ from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
 from typing import Callable, Hashable, Tuple
 
+
+################################################################################
+
+__author__ = "James Ford"
+__copyright__ = "Copyright (c) 2022 James Ford"
+__credits__ = ["James Ford"]
+__license__ = """CC BY-NC-SA 4.0
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+Copyright (c) 2022 James Ford
+"""
+
+__version__ = "1.0.0"
+__maintainer__ = "James Ford"
+__email__ = "irvine.ford@gmail.com"
+__status__ = "Prod"
 
 ################################################################################
 
@@ -58,10 +88,10 @@ class ParallelProcessor:
 
     >>> parallel_processor = ParallelProcessor(worker_func, threads=4)
 
-    >>> parallel_processor.add_argument(process_id=1, func_args=(1, 2), func_kwargs={"letter": "a"})
-    >>> parallel_processor.add_argument(process_id=2, func_args=(3, 4), func_kwargs={"letter": "b"})
-    >>> parallel_processor.add_argument(process_id=3, func_args=(5, 6), func_kwargs={"letter": "c"})
-    >>> parallel_processor.add_argument(process_id=4, func_args=(7, 8), func_kwargs={"letter": "d"})
+    >>> parallel_processor.add_argument(process_id=1, func_args=(1, ), func_kwargs={"letter": "a"})
+    >>> parallel_processor.add_argument(process_id=2, func_args=(2, ), func_kwargs={"letter": "b"})
+    >>> parallel_processor.add_argument(process_id=3, func_args=(3, 4), func_kwargs={"letter": "c"})
+    >>> parallel_processor.add_argument(process_id=4, func_args=(5, 6), func_kwargs={"letter": "d"})
 
     >>> parallel_processor.run(progressbar=True, timeout=60)
     
@@ -197,6 +227,9 @@ class ParallelProcessor:
         self, process_id: Hashable, func_args: Tuple = None, func_kwargs: dict = None
     ) -> None:
         """Add an argument and arguement id to the argument dictionary.
+
+
+        Note: If only passing one func_arg it must be formatted (arg, ) otherwise it will produce an error.
 
         Args:
             process_id (Hashable): Process ID. Used for retrieving outputs from self.results.
