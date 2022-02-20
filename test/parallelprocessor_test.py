@@ -1,9 +1,10 @@
 import os
+import re
 import sys
-import importlib
 import multiprocessing
 
 from contextlib import redirect_stdout
+from importlib.util import find_spec
 from io import StringIO
 
 
@@ -39,13 +40,30 @@ def dummy_worker_3(a, b=1):
 def test_parallelprocessor_import_1():
     """Test that parallelprocessor can be found by importlib."""
 
-    assert importlib.find_loader("parallelprocessor")
+    assert find_spec("parallelprocessor")
 
 
 ################################################################################
 
 
-def test_parallelprocessor_import_2():
+def test_parallelprocessor_import_1():
+    """Test that BasicProgressBar can be imported with errors."""
+
+    try:
+        from parallelprocessor import BasicProgressBar
+
+        result = True
+
+    except ModuleNotFoundError:
+        result = False
+
+    assert result
+
+
+################################################################################
+
+
+def test_parallelprocessor_import_3():
     """Test that ParallelProcessor can be imported with errors."""
 
     try:
@@ -61,7 +79,39 @@ def test_parallelprocessor_import_2():
 
 ################################################################################
 
-from parallelprocessor import ParallelProcessor
+from parallelprocessor import ParallelProcessor, BasicProgressBar
+
+################################################################################
+
+
+def test_basic_progress_bar():
+    """Test BasicProgressBar works as expected."""
+
+    n = 10
+
+    stdout_str = StringIO()
+
+    with redirect_stdout(stdout_str):
+        _ = list(BasicProgressBar(range(n)))
+
+    output = stdout_str.getvalue()
+
+    output_split = output.strip().split("\r")
+
+    assert len(output_split) == n + 1
+
+    assert output.endswith("\n")
+
+    assert all(
+        [
+            re.match(
+                "^Completed [0-9]+/[0-9]+ processes[.] [0-9]{1,2} hours [1-6]*[0-9] minutes [1-6]*[0-9][.][0-9]{2} seconds passed[.]$",
+                e,
+            )
+            for e in output_split
+        ]
+    )
+
 
 ################################################################################
 

@@ -14,8 +14,10 @@ For more information and examples see ParallelProcessor.__doc__
 """
 
 import collections
-import importlib
+import time
+import sys
 
+from importlib.util import find_spec
 from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
 from typing import Callable, Hashable, Tuple
@@ -45,7 +47,7 @@ class ParallelProcessor:
 
     Designed for parallelizing a single function across numerous arguments.
     Utilizies multiprocessing.Pool and runs processes asynchronously.
-    Optionally provides a progressbar using tqdm
+    Optionally provides a progressbar using tqdm or a basic custom progressbar if tqdm is not available.
 
 
     Args:
@@ -312,13 +314,13 @@ class ParallelProcessor:
 
         # Retrieve progressbar function if dependancies are met
         if progressbar:
-            if importlib.find_loader("tqdm"):
+            if find_spec("tqdm"):
                 from tqdm import tqdm
 
                 progressbar_func = tqdm
             else:
-                print("Could not import tqdm. No progressbar will be used.")
-                progressbar_func = None
+                print("Could not import tqdm. Basic progressbar will be used.")
+                progressbar_func = BasicProgressBar
         else:
             progressbar_func = None
 
@@ -336,6 +338,57 @@ class ParallelProcessor:
         print(
             "Processing complete. Results can be accessed via ParallelProcessor.results"
         )
+
+
+################################################################################
+
+
+class BasicProgressBar:
+    """Basic progressbar with no dependancies other than python 3.7+"""
+
+    ############################################################################
+
+    def __init__(self, iterator):
+        self.len = len(iterator)
+        self.i = 0
+        self._iterator = iterator.__iter__()
+
+    ############################################################################
+
+    def __iter__(self):
+        return self
+
+    ############################################################################
+
+    def __next__(self):
+
+        if self.i == 0:
+            self.start_time = time.time()
+
+        msg = (
+            f"\rCompleted {self.i}/{self.len} processes. {self._time_passed()} passed."
+        )
+
+        if self.i == self.len:
+            msg += "\n"
+
+        sys.stdout.write(msg)
+
+        self.i += 1
+
+        return next(self._iterator)
+
+    ############################################################################
+
+    def _time_passed(self):
+
+        time_passed = time.time() - self.start_time
+
+        h = int(time_passed // 60 ** 2)
+        m = int((time_passed - h * 60 ** 2) // 60)
+        s = time_passed - (h * 60 ** 2 + m * 60)
+
+        return f"{h} hours {m} minutes {s:.2f} seconds"
 
 
 ################################################################################
