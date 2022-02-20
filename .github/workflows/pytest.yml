@@ -1,0 +1,35 @@
+# .github/workflows/app.yaml
+2name: PyTest
+3on: push
+4
+5jobs:
+6  test:
+7    runs-on: ubuntu-latest
+8    timeout-minutes: 10
+9
+10    steps:
+11      - name: Check out repository code
+12        uses: actions/checkout@v2
+13
+14      # Setup Python (faster than using Python container)
+15      - name: Setup Python
+16        uses: actions/setup-python@v2
+17        with:
+18          python-version: "3.x"
+19
+20      - name: Install pipenv
+21        run: |
+22          python -m pip install --upgrade pipenv wheel
+23      - id: cache-pipenv
+24        uses: actions/cache@v1
+25        with:
+26          path: ~/.local/share/virtualenvs
+27          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+28
+29      - name: Install dependencies
+30        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+31        run: |
+32          pipenv install --deploy --dev
+33      - name: Run test suite
+34        run: |
+35          pipenv run test -v
