@@ -7,6 +7,7 @@ Made available under a [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by
 Python 3.7+  
 Optional dependancy of tqdm  
 
-## simplify-passing-args branch  
+## progressbar-improvements branch  
 Improvements to make:  
-- allow passing of args as a single arg or iterable, convert to tuple internally
+- create option for basic, no dependancies progressbar
+- get progressbar2 working if possible
