@@ -69,7 +69,7 @@ class ParallelProcessor:
     >>> parallel_processor = ParallelProcessor(worker_func)
 
     >>> for i in range(4):
-    >>>     parallel_processor.add_argument(process_id=i, func_args=(i,))
+    >>>     parallel_processor.add_argument(process_id=i, func_args=(i, ))
 
     >>> parallel_processor.run()
     
