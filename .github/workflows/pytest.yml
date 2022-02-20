@@ -15,7 +15,7 @@
 15      - name: Setup Python
 16        uses: actions/setup-python@v2
 17        with:
-18          python-version: "3.x"
+18          python-version: "3.7"
 19
 20      - name: Install pipenv
 21        run: |
