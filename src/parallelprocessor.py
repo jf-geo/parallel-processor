@@ -14,10 +14,10 @@ For more information and examples see ParallelProcessor.__doc__
 """
 
 import collections
-import importlib
 import time
 import sys
 
+from importlib.util import find_spec
 from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
 from typing import Callable, Hashable, Tuple
@@ -47,7 +47,7 @@ class ParallelProcessor:
 
     Designed for parallelizing a single function across numerous arguments.
     Utilizies multiprocessing.Pool and runs processes asynchronously.
-    Optionally provides a progressbar using tqdm
+    Optionally provides a progressbar using tqdm or a basic custom progressbar if tqdm is not available.
 
 
     Args:
@@ -314,7 +314,7 @@ class ParallelProcessor:
 
         # Retrieve progressbar function if dependancies are met
         if progressbar:
-            if importlib.find_loader("tqdm"):
+            if find_spec("tqdm"):
                 from tqdm import tqdm
 
                 progressbar_func = tqdm
