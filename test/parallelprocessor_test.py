@@ -1,5 +1,7 @@
 import os
 import sys
+import importlib
+import multiprocessing
 
 from contextlib import redirect_stdout
 from io import StringIO
@@ -13,18 +15,41 @@ sys.path.insert(
 ################################################################################
 
 
-def dummy_worker(x):
+def dummy_worker_1(x):
     return x ** 2
 
 
 ################################################################################
 
 
-def test_parallelprocessor_import():
+def dummy_worker_2(a, b):
+    return a * b
+
+
+################################################################################
+
+
+def dummy_worker_3(a, b=1):
+    return a * b
+
+
+################################################################################
+
+
+def test_parallelprocessor_import_1():
+    """Test that parallelprocessor can be found by importlib."""
+
+    assert importlib.find_loader("parallelprocessor")
+
+
+################################################################################
+
+
+def test_parallelprocessor_import_2():
     """Test that ParallelProcessor can be imported with errors."""
 
     try:
-        from parallelprocessor import ParallelProcessor as _import_test_1
+        from parallelprocessor import ParallelProcessor
 
         result = True
 
@@ -44,14 +69,9 @@ from parallelprocessor import ParallelProcessor
 def test_parallelprocessor_init_1():
     """Test ParallelProcessor.__init__() works."""
 
-    try:
-        parallel_processor = ParallelProcessor()
-        result = True
+    parallel_processor = ParallelProcessor()
 
-    except:
-        result = False
-
-    assert result
+    assert True
 
 
 ################################################################################
@@ -65,11 +85,112 @@ def test_parallelprocessor_init_2():
     tests = [
         getattr(parallel_processor, "threads") == os.cpu_count(),
         getattr(parallel_processor, "worker") is None,
+        getattr(parallel_processor, "ids") == set(),
         getattr(parallel_processor, "args") == {},
-        type(getattr(parallel_processor, "results")) == dict,
+        getattr(parallel_processor, "kwargs") == {},
+        getattr(parallel_processor, "processes") == {},
+        getattr(parallel_processor, "results") == {},
+        type(getattr(parallel_processor, "pool")) == multiprocessing.pool.Pool,
     ]
 
     assert all(tests)
+
+
+################################################################################
+
+
+def test__pool_apply_async_1():
+    """Test ParallelProcessor._pool_apply_async with args only."""
+
+    parallel_processor = ParallelProcessor()
+
+    _worker = print
+
+    _args = ("Hello World",)
+
+    parallel_processor.set_worker(_worker)
+
+    parallel_processor._pool_apply_async(worker=_worker, args=_args)
+
+    assert True
+
+
+################################################################################
+
+
+def test__pool_apply_async_2():
+    """Test ParallelProcessor._pool_apply_async with kwargs only."""
+
+    parallel_processor = ParallelProcessor()
+
+    _worker = print
+
+    _kwargs = {"end": "\n"}
+
+    parallel_processor._pool_apply_async(worker=_worker, kwargs=_kwargs)
+
+    assert True
+
+
+################################################################################
+
+
+def test__pool_apply_async_3():
+    """Test ParallelProcessor._pool_apply_async with args and kwargs."""
+
+    parallel_processor = ParallelProcessor()
+
+    _worker = print
+
+    _args = ("Hello World",)
+
+    _kwargs = {"end": "\n"}
+
+    parallel_processor._pool_apply_async(worker=_worker, args=_args, kwargs=_kwargs)
+
+    assert True
+
+
+################################################################################
+
+
+def test__pool_apply_async_4():
+    """Test ParallelProcessor._pool_apply_async without args or kwargs."""
+
+    parallel_processor = ParallelProcessor()
+
+    _worker = print
+
+    try:
+        parallel_processor._pool_apply_async(worker=_worker)
+        result = False
+
+    except ValueError:
+        result = True
+
+    assert result
+
+
+################################################################################
+
+
+def test__pool_apply_async_4():
+    """Test ParallelProcessor._pool_apply_async without worker."""
+
+    parallel_processor = ParallelProcessor()
+
+    _args = ("Hello World",)
+
+    _kwargs = {"end": "\n"}
+
+    try:
+        parallel_processor._pool_apply_async(args=_args, kwargs=_kwargs)
+        result = False
+
+    except AttributeError:
+        result = True
+
+    assert result
 
 
 ################################################################################
@@ -90,55 +211,32 @@ def test_set_worker():
 ################################################################################
 
 
-def test_set_arguments_1():
-    """Test ParallelProcessor.set_arguments works as expected."""
-
-    parallel_processor = ParallelProcessor()
-
-    args = {1: "a", 2: "b"}
-
-    parallel_processor.set_arguments(args)
-
-    assert getattr(parallel_processor, "args") == args
-
-
-################################################################################
-
-
-def test_set_arguments_2():
-    """Test ParallelProcessor.set_arguments raises a ValueError if an incorrect argument is used."""
-
-    parallel_processor = ParallelProcessor()
-
-    args = "foo"
-
-    try:
-        parallel_processor.set_arguments(args)
-        result = False
-
-    except ValueError:
-        result = True
-
-    assert result
-
-
-################################################################################
-
-
 def test_add_argument_1():
     """Test ParallelProcessor.add_argument works as expected."""
 
     parallel_processor = ParallelProcessor()
 
-    arg_id = 1
+    _process_id = 1
 
-    arg = "a"
+    _func_args = ("a",)
 
-    parallel_processor.add_argument(arg_id, arg)
+    _func_kwargs = {"foo": "bar"}
 
+    parallel_processor.add_argument(
+        process_id=_process_id, func_args=_func_args, func_kwargs=_func_kwargs
+    )
+
+    ids = getattr(parallel_processor, "ids")
     args = getattr(parallel_processor, "args")
+    kwargs = getattr(parallel_processor, "kwargs")
 
-    tests = [arg_id in args, args[arg_id] == arg]
+    tests = [
+        _process_id in ids,
+        _process_id in args,
+        _process_id in kwargs,
+        args[_process_id] == _func_args,
+        kwargs[_process_id] == _func_kwargs,
+    ]
 
     assert all(tests)
 
@@ -147,16 +245,20 @@ def test_add_argument_1():
 
 
 def test_add_argument_2():
-    """Test ParallelProcessor.add_argument raises a ValueError if arg_id is not hashable."""
+    """Test ParallelProcessor.add_argument raises a ValueError if process_id is not hashable."""
 
     parallel_processor = ParallelProcessor()
 
-    arg_id = []
+    _process_id = []
 
-    arg = "a"
+    _func_args = ("a",)
+
+    _func_kwargs = {"foo": "bar"}
 
     try:
-        parallel_processor.add_argument(arg_id, arg)
+        parallel_processor.add_argument(
+            process_id=_process_id, func_args=_func_args, func_kwargs=_func_kwargs
+        )
         result = False
 
     except ValueError:
@@ -169,18 +271,24 @@ def test_add_argument_2():
 
 
 def test_add_argument_3():
-    """Test ParallelProcessor.add_argument raises a ValueError if arg_id is already in use."""
+    """Test ParallelProcessor.add_argument raises a ValueError if process_id is already in use."""
 
     parallel_processor = ParallelProcessor()
 
-    arg_id = 1
+    _process_id = 1
 
-    arg = "a"
+    _func_args = ("a",)
 
-    parallel_processor.add_argument(arg_id, arg)
+    _func_kwargs = {"foo": "bar"}
+
+    parallel_processor.add_argument(
+        process_id=_process_id, func_args=_func_args, func_kwargs=_func_kwargs
+    )
 
     try:
-        parallel_processor.add_argument(arg_id, arg)
+        parallel_processor.add_argument(
+            process_id=_process_id, func_args=_func_args, func_kwargs=_func_kwargs
+        )
         result = False
 
     except ValueError:
@@ -192,14 +300,78 @@ def test_add_argument_3():
 ################################################################################
 
 
+def test_add_argument_4():
+    """Test ParallelProcessor.add_argument raises a ValueError if neither func_args nor func_kwargs are passed."""
+
+    parallel_processor = ParallelProcessor()
+
+    _process_id = 1
+
+    try:
+        parallel_processor.add_argument(process_id=_process_id)
+        result = False
+
+    except ValueError:
+        result = True
+
+    assert result
+
+
+################################################################################
+
+
+def test__create_processes_1():
+    """Test ParallelProcessor._create_processes runs as expected."""
+
+    parallel_processor = ParallelProcessor()
+
+    _worker = print
+
+    _process_id = 1
+
+    _args = ("Hello World",)
+
+    _kwargs = {"end": "\n"}
+
+    parallel_processor.set_worker(_worker)
+
+    parallel_processor.add_argument(
+        process_id=_process_id, func_args=_args, func_kwargs=_kwargs
+    )
+
+    parallel_processor._create_processes()
+
+    assert True
+
+
+################################################################################
+
+
+def test__create_processes_1():
+    """Test ParallelProcessor._create_processes raises an AttributeError if arguments haven't been set."""
+
+    parallel_processor = ParallelProcessor(worker=dummy_worker_1)
+
+    try:
+        parallel_processor._create_processes()
+        assert False
+
+    except AttributeError:
+        assert True
+
+
+################################################################################
+
+
 def test_run_1():
     """Test ParallelProcessor.run raises a AttributeError if worker is not set."""
 
-    _args = {(i + 1) ** 2: j for i, j in enumerate(range(1, 6))}
+    _args = {(i + 1) ** 2: (j) for i, j in enumerate(range(1, 6))}
 
-    parallel_processor = ParallelProcessor(
-        worker=None, processing_args=_args, threads=2
-    )
+    parallel_processor = ParallelProcessor(worker=None, threads=2)
+
+    for id, arg in _args.items():
+        parallel_processor.add_argument(process_id=id, func_args=arg)
 
     try:
         parallel_processor.run()
@@ -215,13 +387,11 @@ def test_run_1():
 
 
 def test_run_2():
-    """Test ParallelProcessor.run raises a AttributeError if args is not set."""
+    """Test ParallelProcessor.run raises a AttributeError if args are not set."""
 
-    _worker = dummy_worker
+    _worker = dummy_worker_1
 
-    parallel_processor = ParallelProcessor(
-        worker=_worker, processing_args=None, threads=2
-    )
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
     try:
         parallel_processor.run()
@@ -239,15 +409,20 @@ def test_run_2():
 def test_run_3():
     """Test ParallelProcessor.run works as expected when progressbar=True."""
 
-    _worker = dummy_worker
+    _worker = dummy_worker_1
 
-    _args = {(i + 1) ** 2: j for i, j in enumerate(range(1, 6))}
+    _args = {(i + 1) ** 2: (j,) for i, j in enumerate(range(1, 6))}
 
-    parallel_processor = ParallelProcessor(
-        worker=_worker, processing_args=_args, threads=2
-    )
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
-    parallel_processor.run(progressbar=True)
+    for id, arg in _args.items():
+        parallel_processor.add_argument(process_id=id, func_args=arg)
+
+    stdout_str = StringIO()
+    with redirect_stdout(stdout_str):
+        parallel_processor.run(progressbar=True)
+
+    assert stdout_str.getvalue() != ""
 
     results = parallel_processor.results
 
@@ -264,19 +439,98 @@ def test_run_3():
 def test_run_4():
     """Test ParallelProcessor.run works as expected when progressbar=False."""
 
-    _worker = dummy_worker
+    _worker = dummy_worker_1
 
-    _args = {(i + 1) ** 2: j for i, j in enumerate(range(1, 6))}
+    _args = {(i + 1) ** 2: (j,) for i, j in enumerate(range(1, 6))}
 
-    parallel_processor = ParallelProcessor(
-        worker=_worker, processing_args=_args, threads=2
-    )
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
+
+    for id, arg in _args.items():
+        parallel_processor.add_argument(process_id=id, func_args=arg)
 
     stdout_str = StringIO()
     with redirect_stdout(stdout_str):
         parallel_processor.run(progressbar=False)
 
-    assert stdout_str.getvalue() == ""
+    assert stdout_str.getvalue() != ""
+
+    results = parallel_processor.results
+
+    assert results
+
+    tests = [k == v for k, v in results.items()]
+
+    assert all(tests)
+
+
+################################################################################
+
+
+def test_run_5():
+    """Test ParallelProcessor.run works as expected with multiple arguments per function."""
+
+    _worker = dummy_worker_2
+
+    _args = {(i + 1) ** 2: (j, j) for i, j in enumerate(range(1, 6))}
+
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
+
+    for id, arg in _args.items():
+        parallel_processor.add_argument(process_id=id, func_args=arg)
+
+    parallel_processor.run()
+
+    results = parallel_processor.results
+
+    assert results
+
+    tests = [k == v for k, v in results.items()]
+
+    assert all(tests)
+
+
+################################################################################
+
+
+def test_run_6():
+    """Test ParallelProcessor.run works as expected passing kwargs."""
+
+    _worker = dummy_worker_3
+
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
+
+    for i in range(1, 6):
+        parallel_processor.add_argument(
+            process_id=(i) ** 2, func_args=(i,), func_kwargs={"b": i}
+        )
+
+    parallel_processor.run()
+
+    results = parallel_processor.results
+
+    assert results
+
+    tests = [k == v for k, v in results.items()]
+
+    assert all(tests)
+
+
+################################################################################
+
+
+def test_run_7():
+    """Test ParallelProcessor.run works as expected passing positional args to kwargs."""
+
+    _worker = dummy_worker_3
+
+    _args = {(i + 1) ** 2: (j, j) for i, j in enumerate(range(1, 6))}
+
+    parallel_processor = ParallelProcessor(worker=_worker, threads=2)
+
+    for id, arg in _args.items():
+        parallel_processor.add_argument(process_id=id, func_args=arg)
+
+    parallel_processor.run()
 
     results = parallel_processor.results
 
