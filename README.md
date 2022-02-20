@@ -4,5 +4,5 @@
 Made available under a [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.
 
 ## Requirements
-Python 3.7+
-Optional dependancy of tqdm
+Python 3.7+  
+Optional dependancy of tqdm  
