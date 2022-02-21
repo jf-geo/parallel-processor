@@ -202,7 +202,7 @@ class ParallelProcessor:
 
         if args is None and kwargs is None:
             raise ValueError(
-                f"ParallelProcessor._pool_apply_async: Arguments args= and/or kwargs= must be passed. Both are 'None' by default."
+                "ParallelProcessor._pool_apply_async: Arguments args= and/or kwargs= must be passed. Both are 'None' by default."
             )
 
         # Create async process
@@ -261,7 +261,7 @@ class ParallelProcessor:
         # Verify func_args &/or func_kwargs are passed
         if not func_args and not func_kwargs:
             raise ValueError(
-                f"ParallelProcessor.add_argument: Neither func_args or func_kwargs passed. Argument not added."
+                "ParallelProcessor.add_argument: Neither func_args or func_kwargs passed. Argument not added."
             )
 
         # Convert func_args to a tuple
