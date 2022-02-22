@@ -1,3 +1,5 @@
+"""Tests for parallelprocessor.py"""
+
 import os
 import re
 import sys
@@ -7,13 +9,22 @@ from contextlib import redirect_stdout
 from importlib.util import find_spec
 from io import StringIO
 
+# pylint: disable=invalid-name
+# pylint: disable=redefined-outer-name
+# pylint: disable=import-outside-toplevel
+# pylint: disable=unused-import
+# pylint: disable=import-error
+# pylint: disable=reimported
+# pylint: disable=wrong-import-position
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
 
 # Add src directory to sys.path
 sys.path.insert(
     1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
 )
 
-################################################################################
+########################################################################################
 
 
 def dummy_worker_1(x):
@@ -22,7 +33,7 @@ def dummy_worker_1(x):
     return x ** 2
 
 
-################################################################################
+########################################################################################
 
 
 def dummy_worker_2(a, b):
@@ -31,7 +42,7 @@ def dummy_worker_2(a, b):
     return a * b
 
 
-################################################################################
+########################################################################################
 
 
 def dummy_worker_3(a, b=1):
@@ -40,7 +51,7 @@ def dummy_worker_3(a, b=1):
     return a * b
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_import_1():
@@ -49,7 +60,7 @@ def test_parallelprocessor_import_1():
     assert find_spec("parallelprocessor")
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_import_2():
@@ -66,7 +77,7 @@ def test_parallelprocessor_import_2():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_import_3():
@@ -83,19 +94,24 @@ def test_parallelprocessor_import_3():
     assert result
 
 
-################################################################################
+########################################################################################
 
 # Import classes to test
 from parallelprocessor import ParallelProcessor, BasicProgressBar
 
-################################################################################
+########################################################################################
 
 
 def test_basic_progress_bar():
     """Test BasicProgressBar works as expected."""
 
     # Define progress print out regex pattern
-    progress_pattern = "^Completed [0-9]+/[0-9]+ processes[.] [0-9]{1,2} hours [1-6]*[0-9] minutes [1-6]*[0-9][.][0-9]{2} seconds passed[.]$"
+    progress_pattern = "".join(
+        (
+            "^Completed [0-9]+/[0-9]+ processes[.] [0-9]{1,2} hours",
+            " [1-6]*[0-9] minutes [1-6]*[0-9][.][0-9]{2} seconds passed[.]$",
+        )
+    )
 
     # Number of itervals
     n = 10
@@ -120,10 +136,10 @@ def test_basic_progress_bar():
     assert output.endswith("\n")
 
     # Check that all printed outputs match the correct pattern
-    assert all([re.match(progress_pattern, e,) for e in output_split])
+    assert all(re.match(progress_pattern, e) for e in output_split)
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_init_1():
@@ -132,10 +148,10 @@ def test_parallelprocessor_init_1():
     # Check that ParallelProcessor can be initialized without error.
     parallel_processor = ParallelProcessor()
 
-    assert True
+    assert parallel_processor
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_init_2():
@@ -145,21 +161,30 @@ def test_parallelprocessor_init_2():
     parallel_processor = ParallelProcessor()
 
     # Check that attributes are set as expected
-    tests = [
-        getattr(parallel_processor, "threads") == os.cpu_count(),
-        getattr(parallel_processor, "worker") is None,
-        getattr(parallel_processor, "ids") == set(),
-        getattr(parallel_processor, "args") == {},
-        getattr(parallel_processor, "kwargs") == {},
-        getattr(parallel_processor, "processes") == {},
-        getattr(parallel_processor, "results") == {},
-        type(getattr(parallel_processor, "pool")) == multiprocessing.pool.Pool,
-    ]
 
-    assert all(tests)
+    assert getattr(parallel_processor, "threads") == os.cpu_count()
+
+    assert getattr(parallel_processor, "worker") is None
+
+    ids = getattr(parallel_processor, "ids")
+    assert not ids and isinstance(ids, set)
+
+    args = getattr(parallel_processor, "args")
+    assert not args and isinstance(args, dict)
+
+    kwargs = getattr(parallel_processor, "kwargs")
+    assert not kwargs and isinstance(kwargs, dict)
+
+    processes = getattr(parallel_processor, "processes")
+    assert not processes and isinstance(processes, dict)
+
+    results = getattr(parallel_processor, "results")
+    assert not results and isinstance(results, dict)
+
+    assert isinstance(getattr(parallel_processor, "_pool"), multiprocessing.pool.Pool)
 
 
-################################################################################
+########################################################################################
 
 
 def test_parallelprocessor_init_3():
@@ -181,7 +206,7 @@ def test_parallelprocessor_init_3():
     assert getattr(parallel_processor, "worker").__name__ == _worker.__name__
 
 
-################################################################################
+########################################################################################
 
 
 def test__pool_apply_async_1():
@@ -205,7 +230,7 @@ def test__pool_apply_async_1():
     assert True
 
 
-################################################################################
+########################################################################################
 
 
 def test__pool_apply_async_2():
@@ -226,7 +251,7 @@ def test__pool_apply_async_2():
     assert True
 
 
-################################################################################
+########################################################################################
 
 
 def test__pool_apply_async_3():
@@ -250,7 +275,7 @@ def test__pool_apply_async_3():
     assert True
 
 
-################################################################################
+########################################################################################
 
 
 def test__pool_apply_async_4():
@@ -274,7 +299,7 @@ def test__pool_apply_async_4():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test__pool_apply_async_5():
@@ -301,7 +326,7 @@ def test__pool_apply_async_5():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_set_worker():
@@ -320,7 +345,7 @@ def test_set_worker():
     assert parallel_processor.worker is _worker
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_1():
@@ -361,11 +386,12 @@ def test_add_argument_1():
     assert all(tests)
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_2():
-    """Test ParallelProcessor.add_argument raises a ValueError if process_id is not hashable."""
+    """Test ParallelProcessor.add_argument raises a ValueError if process_id is not
+     hashable."""
 
     # Init ParallelProcessor
     parallel_processor = ParallelProcessor()
@@ -393,11 +419,12 @@ def test_add_argument_2():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_3():
-    """Test ParallelProcessor.add_argument raises a ValueError if process_id is already in use."""
+    """Test ParallelProcessor.add_argument raises a ValueError if process_id is already
+     in use."""
 
     # Init ParallelProcessor
     parallel_processor = ParallelProcessor()
@@ -430,11 +457,12 @@ def test_add_argument_3():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_4():
-    """Test ParallelProcessor.add_argument raises a ValueError func_kwargs is passed and is not a dictionary."""
+    """Test ParallelProcessor.add_argument raises a ValueError func_kwargs is passed and
+     is not a dictionary."""
 
     # Init ParallelProcessor
     parallel_processor = ParallelProcessor()
@@ -459,11 +487,12 @@ def test_add_argument_4():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_5():
-    """Test ParallelProcessor.add_argument raises a ValueError if neither func_args nor func_kwargs are passed."""
+    """Test ParallelProcessor.add_argument raises a ValueError if neither func_args nor
+     func_kwargs are passed."""
 
     # Init ParallelProcessor
     parallel_processor = ParallelProcessor()
@@ -483,11 +512,12 @@ def test_add_argument_5():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_add_argument_6():
-    """Test ParallelProcessor.add_argument converts non-tuple func_args to tuples without modifying it's value/values."""
+    """Test ParallelProcessor.add_argument converts non-tuple func_args to tuples
+     without modifying it's value/values."""
 
     # worker func
     _worker = dummy_worker_1
@@ -506,14 +536,14 @@ def test_add_argument_6():
     }
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in args_in.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in args_in.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     # Get args dictionary from ParallelProcessor instance
     args_out = getattr(parallel_processor, "args")
 
     # Check that all set args are tuples
-    assert all(map(lambda x: type(x) == tuple, args_out.values()))
+    assert all(map(lambda x: isinstance(x, tuple), args_out.values()))
 
     # Check that int input arg is unmodified
     assert args_out["str"][0] == args_in["str"]
@@ -525,20 +555,20 @@ def test_add_argument_6():
     assert args_out["float"][0] == args_in["float"]
 
     # Check that list input values are unmodified
-    assert all([args_out["list"][i] == e for i, e in enumerate(args_in["list"])])
+    assert all(args_out["list"][i] == e for i, e in enumerate(args_in["list"]))
 
     # Check that set input values are unmodified
-    assert all([e in args_in["set"] for e in args_out["set"]])
+    assert all(e in args_in["set"] for e in args_out["set"])
 
     # Check that tuple input values are unmodified
     assert args_in["tuple"] == args_out["tuple"]
 
-    # Check that args can be consumed by ParallelProcessor._pool_apply_async successfully
+    # Check that args can be consumed by ParallelProcessor._pool_apply_async
     for arg in args_out:
         parallel_processor._pool_apply_async(args=arg)
 
 
-################################################################################
+########################################################################################
 
 
 def test__create_processes_1():
@@ -573,11 +603,12 @@ def test__create_processes_1():
     assert True
 
 
-################################################################################
+########################################################################################
 
 
 def test__create_processes_2():
-    """Test ParallelProcessor._create_processes raises an AttributeError if arguments haven't been set."""
+    """Test ParallelProcessor._create_processes raises an AttributeError if arguments
+     haven't been set."""
 
     # worker to set
     _worker = dummy_worker_1
@@ -595,7 +626,7 @@ def test__create_processes_2():
         assert True
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_1():
@@ -608,8 +639,8 @@ def test_run_1():
     parallel_processor = ParallelProcessor(worker=None, threads=2)
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in _args.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in _args.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     try:
         # Call ParallelProcessor.run()
@@ -623,7 +654,7 @@ def test_run_1():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_2():
@@ -647,7 +678,7 @@ def test_run_2():
     assert result
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_3():
@@ -663,8 +694,8 @@ def test_run_3():
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in _args.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in _args.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     # Capture stdout as a string when calling ParallelProcessor.run(progressbar=True)
     stdout_str = StringIO()
@@ -686,7 +717,7 @@ def test_run_3():
     assert all(tests)
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_4():
@@ -702,8 +733,8 @@ def test_run_4():
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in _args.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in _args.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     # Capture stdout as a string when calling ParallelProcessor.run(progressbar=False)
     stdout_str = StringIO()
@@ -720,16 +751,15 @@ def test_run_4():
     assert results
 
     # Check that outputs are as expected
-    tests = [k == v for k, v in results.items()]
-
-    assert all(tests)
+    assert all(k == v for k, v in results.items())
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_5():
-    """Test ParallelProcessor.run works as expected with multiple arguments per function."""
+    """Test ParallelProcessor.run works as expected with multiple arguments per
+     function."""
 
     # worker func
     _worker = dummy_worker_2
@@ -741,8 +771,8 @@ def test_run_5():
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in _args.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in _args.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     # Call ParallelProcessor.run()
     parallel_processor.run()
@@ -754,12 +784,10 @@ def test_run_5():
     assert results
 
     # Check that outputs are as expected
-    tests = [k == v for k, v in results.items()]
-
-    assert all(tests)
+    assert all(k == v for k, v in results.items())
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_6():
@@ -787,12 +815,10 @@ def test_run_6():
     assert results
 
     # Check that outputs are as expected
-    tests = [k == v for k, v in results.items()]
-
-    assert all(tests)
+    assert all(k == v for k, v in results.items())
 
 
-################################################################################
+########################################################################################
 
 
 def test_run_7():
@@ -808,8 +834,8 @@ def test_run_7():
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
 
     # Add arguments to ParallelProcessor instance
-    for id, arg in _args.items():
-        parallel_processor.add_argument(process_id=id, func_args=arg)
+    for _process_id, arg in _args.items():
+        parallel_processor.add_argument(process_id=_process_id, func_args=arg)
 
     # Call ParallelProcessor.run()
     parallel_processor.run()
@@ -821,19 +847,17 @@ def test_run_7():
     assert results
 
     # Check that outputs are as expected
-    tests = [k == v for k, v in results.items()]
-
-    assert all(tests)
+    assert all(k == v for k, v in results.items())
 
 
-################################################################################
+########################################################################################
 
 
 def main():
-    pass
+    """Empty fuction"""
 
 
-################################################################################
+########################################################################################
 
 if __name__ == "__main__":
     main()
