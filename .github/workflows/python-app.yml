@@ -27,11 +27,11 @@ jobs:
         python -m pip install pylint
         python -m pip install pytest
     - name: Lint with pylint
-    shell: bash -l {0}
+      shell: bash
       run: |
         pylint --disable=line-too-long $(git ls-files '*.py')
     - name: Format with black
-    shell: bash -l {0}
+      shell: bash
       run: |
         black $(git ls-files '*.py')
     - name: Test with pytest
