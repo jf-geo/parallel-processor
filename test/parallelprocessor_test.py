@@ -602,7 +602,7 @@ def test_run_1():
     """Test ParallelProcessor.run raises a AttributeError if worker is not set."""
 
     # args to pass
-    _args = {(i + 1) ** 2: (j) for i, j in enumerate(range(1, 6))}
+    _args = {i: (i,) for i in range(1, 6)}
 
     # Init ParallelProcessor instance
     parallel_processor = ParallelProcessor(worker=None, threads=2)
@@ -657,7 +657,7 @@ def test_run_3():
     _worker = dummy_worker_1
 
     # args to pass
-    _args = {(i + 1) ** 2: (j,) for i, j in enumerate(range(1, 6))}
+    _args = {_worker(i): (i,) for i in range(1, 6)}
 
     # Init ParallelProcessor instance
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
@@ -696,7 +696,7 @@ def test_run_4():
     _worker = dummy_worker_1
 
     # args to pass
-    _args = {(i + 1) ** 2: (j,) for i, j in enumerate(range(1, 6))}
+    _args = {_worker(i): (i,) for i in range(1, 6)}
 
     # Init ParallelProcessor instance
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
@@ -735,7 +735,7 @@ def test_run_5():
     _worker = dummy_worker_2
 
     # args to pass
-    _args = {(i + 1) ** 2: (j, j) for i, j in enumerate(range(1, 6))}
+    _args = {_worker(i, i): (i, i) for i in range(1, 6)}
 
     # Init ParallelProcessor instance
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
@@ -774,7 +774,7 @@ def test_run_6():
     # Add arguments to ParallelProcessor instance
     for i in range(1, 6):
         parallel_processor.add_argument(
-            process_id=(i) ** 2, func_args=(i,), func_kwargs={"b": i}
+            process_id=_worker(i, b=i), func_args=(i,), func_kwargs={"b": i}
         )
 
     # Call ParallelProcessor.run()
@@ -802,7 +802,7 @@ def test_run_7():
     _worker = dummy_worker_3
 
     # args to pass
-    _args = {(i + 1) ** 2: (j, j) for i, j in enumerate(range(1, 6))}
+    _args = {_worker(i, i): (i, i) for i in range(1, 6)}
 
     # Init ParallelProcessor instance
     parallel_processor = ParallelProcessor(worker=_worker, threads=2)
