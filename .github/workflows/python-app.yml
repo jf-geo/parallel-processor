@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest"]
+        os: ["ubuntu-latest", "windows-latest"]
         python: ["3.7", 3".8", "3.9", "3.10"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -26,7 +26,12 @@ jobs:
         python -m pip install black
         python -m pip install pylint
         python -m pip install pytest
-    - name: Lint with black
+    - name: Lint with pylint
+    shell: bash -l {0}
+      run: |
+        pylint --disable=line-too-long $(git ls-files '*.py')
+    - name: Format with black
+    shell: bash -l {0}
       run: |
         black $(git ls-files '*.py')
     - name: Test with pytest
