@@ -8,8 +8,8 @@ Requirements:
 
 This script allows the user to parallize a process using multiprocessing.Pool.
 For best results, define the function in a separate file with light dependancies
- and import it before using it. 
- 
+ and import it before using it.
+
 For more information and examples see ParallelProcessor.__doc__
 """
 
@@ -22,8 +22,11 @@ from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
 from typing import Callable, Hashable, Iterable, Tuple, Union, Any
 
+if find_spec("tqdm"):
+    from tqdm import tqdm
 
-################################################################################
+
+########################################################################################
 
 __author__ = "James Ford"
 __copyright__ = "Copyright (c) 2022 James Ford"
@@ -38,7 +41,7 @@ __maintainer__ = "James Ford"
 __email__ = "irvine.ford@gmail.com"
 __status__ = "Prod"
 
-################################################################################
+########################################################################################
 
 
 class ParallelProcessor:
@@ -47,21 +50,24 @@ class ParallelProcessor:
 
     Designed for parallelizing a single function across numerous arguments.
     Utilizies multiprocessing.Pool and runs processes asynchronously.
-    Optionally provides a progressbar using tqdm or a basic custom progressbar if tqdm is not available.
+    Optionally provides a progressbar using tqdm or a basic custom progressbar if tqdm
+     is not available.
 
 
     Args:
-        worker (func, optional): The python function to run in parallel. Can be set using ParallelProcessor.set_worker(func).
+        worker (func, optional): The python function to run in parallel. Can be set
+         using ParallelProcessor.set_worker(func).
                 Function must be imported into main script. Defaults to None.
-        threads (int, optional): The number of CPU threads to use. Defaults to cpu_count().
+        threads (int, optional): The number of CPU threads to use. Defaults to
+         cpu_count().
 
 
     Examples:
 
-    ############################################################################
+    ####################################################################################
 
     Example 1 - Simple use of ParallelProcessor:
-    
+
     >>> from parallelprocessor import ParallelProcessor
 
     >>> def worker_func(process_id):
@@ -74,13 +80,14 @@ class ParallelProcessor:
     >>>     parallel_processor.add_argument(process_id=i, func_args=i)
 
     >>> parallel_processor.run()
-    
+
     >>> results = parallel_processor.results
 
-    ############################################################################
+    ####################################################################################
 
-    Example 2 - Define a function, set multiple processes, run in parallel with a progressbar and a 1 minute timeout set:
-    
+    Example 2 - Define a function, set multiple processes, run in parallel with a
+     progressbar and a 1 minute timeout set:
+
     >>> from parallelprocessor import ParallelProcessor
 
     >>> # For best performance define this function in a separate file and import it
@@ -92,17 +99,21 @@ class ParallelProcessor:
 
     >>> parallel_processor.add_argument(process_id=1, func_args=1)
     >>> parallel_processor.add_argument(process_id=2, func_kwargs={"letter": "a"})
-    >>> parallel_processor.add_argument(process_id=3, func_args=[3, 4], func_kwargs={"letter": "b"})
-    >>> parallel_processor.add_argument(process_id=4, func_args={5, 6}, func_kwargs={"letter": "c"})
+    >>> parallel_processor.add_argument(
+    >>>     process_id=3, func_args=[3, 4], func_kwargs={"letter": "b"}
+    >>> )
+    >>> parallel_processor.add_argument(
+    >>>     process_id=4, func_args={5, 6}, func_kwargs={"letter": "c"}
+    >>> )
 
     >>> parallel_processor.run(progressbar=True, timeout=60)
-    
+
     >>> results = parallel_processor.results
 
-    ############################################################################
+    ####################################################################################
 
     Example 3 - Convert a directory of ECWs to GeoTIFFs using gdal:
-    
+
     >>> from parallelprocessor import ParallelProcessor
     >>> from osgeo import gdal
     >>> from pathib import Path
@@ -129,17 +140,25 @@ class ParallelProcessor:
     >>> for ecw in ecws:
     >>>     id = ecw.name
     >>>     input_filename = ecw.as_posix()
-    >>>     output_filename = Path(gtiff_dir).joinpath(f"{ecw.stem}.{gtiff_ext}").as_posix()
+    >>>     output_filename = Path(gtiff_dir).joinpath(
+    >>>         f"{ecw.stem}.{gtiff_ext}"
+    >>>     ).as_posix()
     >>>     _args = [output_filename, input_filename]
-    >>>     parallel_processor.add_argument(process_id=id, func_args=_args, func_kwargs=_kwargs)
+    >>>     parallel_processor.add_argument(
+    >>>     process_id=id, func_args=_args, func_kwargs=_kwargs
+    >>> )
 
     >>> parallel_processor.run(progressbar=True, timeout=60*10)
-    
+
     >>> results = parallel_processor.results
 
-    ############################################################################
+    ####################################################################################
 
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=expression-not-assigned
+    # pylint: disable=consider-using-with
 
     def __init__(self, worker: Callable = None, threads: int = cpu_count(),) -> None:
 
@@ -157,37 +176,41 @@ class ParallelProcessor:
         # Initialize processing pool
         self._init_pool()
 
-    ############################################################################
+    ####################################################################################
 
     def _init_pool(self):
-        """Initialize multiprocessing.Pool as self.pool"""
+        """Initialize multiprocessing.Pool as self._pool"""
 
         if self.threads > cpu_count():
             self.threads = cpu_count()
 
-        self.pool = Pool(processes=self.threads)
+        self._pool = Pool(processes=self.threads)
 
-    ############################################################################
+    ####################################################################################
 
     def _pool_apply_async(
         self, worker: Callable = None, args: Tuple = None, kwargs: dict = None
     ) -> AsyncResult:
         """Add a function with args/kwargs to the processing queue.
 
-        
+
         Uses ParallelProcessor.worker as the worker function unless otherwise specified.
         Arguments args and/or kwargs must be passed.
 
         Args:
-            worker (Callable, optional): Worker function to use. If 'None' defaults to ParallelProcessor.worker. Defaults to None.
-            args (Tuple, optional): A tuple of args to be passed to the worker function. Defaults to None.
-            kwargs (dict, optional): A dictionary of kwargs to be passed to the worker function. Defaults to None.
+            worker (Callable, optional): Worker function to use. If 'None' defaults to
+                 ParallelProcessor.worker. Defaults to None.
+            args (Tuple, optional): A tuple of args to be passed to the worker function.
+                 Defaults to None.
+            kwargs (dict, optional): A dictionary of kwargs to be passed to the worker
+                 function. Defaults to None.
 
         Returns:
             AsyncResult: Result of Pool.apply_async().
 
         Raises:
-            AttributeError: Raises an AttributeError if the worker function is not valid.
+            AttributeError: Raises an AttributeError if the worker function is not
+                 valid.
             ValueError: Raises a ValueError if neither args nor kwargs are passed.
         """
 
@@ -197,33 +220,39 @@ class ParallelProcessor:
         # Validate worker function is set
         if not worker or not callable(worker):
             raise AttributeError(
-                "ParallelProcessor._pool_apply_async: 'worker' is not callable. Please set the worker function with ParallelProcessor.set_worker"
+                (
+                    "ParallelProcessor._pool_apply_async: 'worker' is not callable.",
+                    " Please set the worker function with ParallelProcessor.set_worker",
+                )
             )
 
         if args is None and kwargs is None:
             raise ValueError(
-                "ParallelProcessor._pool_apply_async: Arguments args= and/or kwargs= must be passed. Both are 'None' by default."
+                (
+                    "ParallelProcessor._pool_apply_async: Arguments args= and/or ",
+                    "kwargs= must be passed. Both are 'None' by default.",
+                )
             )
 
         # Create async process
         if args and kwargs:
-            async_result = self.pool.apply_async(worker, args=args, kwds=kwargs)
+            async_result = self._pool.apply_async(worker, args=args, kwds=kwargs)
         elif args and not kwargs:
-            async_result = self.pool.apply_async(worker, args=args)
+            async_result = self._pool.apply_async(worker, args=args)
         else:
-            async_result = self.pool.apply_async(worker, kwds=kwargs)
+            async_result = self._pool.apply_async(worker, kwds=kwargs)
 
         # Return async_result
         return async_result
 
-    ############################################################################
+    ####################################################################################
 
     def set_worker(self, worker: Callable) -> None:
         """Set the function to be run in parallel."""
 
         self.worker = worker
 
-    ############################################################################
+    ####################################################################################
 
     def add_argument(
         self,
@@ -234,13 +263,17 @@ class ParallelProcessor:
         """Add an argument and arguement id to the argument dictionary.
 
 
-        Note: If only passing one func_arg it must be formatted (arg, ) otherwise it will produce an error.
+        Note: If only passing one func_arg it must be formatted (arg, ) otherwise it
+         will produce an error.
 
         Args:
-            process_id (Hashable): Process ID. Used for retrieving outputs from self.results.
-            func_args Union[Iterable, Any]: Args to pass to the worker function. Can be a single value or an iterable.
+            process_id (Hashable): Process ID. Used for retrieving outputs from
+                 self.results.
+            func_args Union[Iterable, Any]: Args to pass to the worker function. Can be
+                 a single value or an iterable.
                 Whatever is passed will be converted to a tuple. Default is None.
-            func_kwargs (dict): A dictionary of kwargs to pass to the worker function. Default is None.
+            func_kwargs (dict): A dictionary of kwargs to pass to the worker function.
+                 Default is None.
 
         Raises:
             ValueError: Raises ValueError if process_id is already in use
@@ -249,26 +282,35 @@ class ParallelProcessor:
         # Verify process_id is hashable
         if not isinstance(process_id, collections.Hashable):
             raise ValueError(
-                f"ParallelProcessor.add_argument: Argument ID '{process_id}' is not hashable. Argument not added."
+                (
+                    f"ParallelProcessor.add_argument: Argument ID '{process_id}' is not",
+                    " hashable. Argument not added.",
+                )
             )
 
         # Verify func_kwargs a dictionary, if passed
-        if func_kwargs and not type(func_kwargs) == dict:
+        if func_kwargs and not isinstance(func_kwargs, dict):
             raise ValueError(
-                f"ParallelProcessor.add_argument: func_kwargs must be a dictionary, not '{type(func_kwargs).__name__}'. Argument not added."
+                (
+                    "ParallelProcessor.add_argument: func_kwargs must be a dictionary,",
+                    f" not '{type(func_kwargs).__name__}'. Argument not added.",
+                )
             )
 
         # Verify func_args &/or func_kwargs are passed
         if not func_args and not func_kwargs:
             raise ValueError(
-                "ParallelProcessor.add_argument: Neither func_args or func_kwargs passed. Argument not added."
+                (
+                    "ParallelProcessor.add_argument: Neither func_args or func_kwargs",
+                    " passed. Argument not added.",
+                )
             )
 
         # Convert func_args to a tuple
-        if func_args and not type(func_args) == tuple:
+        if func_args and not isinstance(func_args, tuple):
 
             # Manually define tuple if func_args is a string
-            if type(func_args) == str:
+            if isinstance(func_args, str):
                 func_args = (func_args,)
 
             # Cast to tuple if func_args is iterable
@@ -288,26 +330,34 @@ class ParallelProcessor:
         # If process_if is already in use raise a ValueError
         else:
             raise ValueError(
-                f"ParallelProcessor.add_argument: Argument ID '{process_id}' already in use. Argument not added."
+                (
+                    f"ParallelProcessor.add_argument: Argument ID '{process_id}' already",
+                    " in use. Argument not added.",
+                )
             )
 
-    ############################################################################
+    ####################################################################################
 
     def _create_processes(self):
         """Create processes from saved process_ids, func_args, and func_kwargs.
-        
-        
-        After ParallelProcessor._create_processes is run the pool is closed, preventing new processes from being created.
+
+
+        After ParallelProcessor._create_processes is run the pool is closed, preventing
+         new processes from being created.
 
         Raises:
             AttributeError: Raises an Attribute error if not arguments are stored
-        
+
         """
 
         # Verify arguments exist
         if not self.ids or (not self.args and not self.kwargs):
             raise AttributeError(
-                "ParallelProcessor._create_processes: Processes cannot be created as arguments have not been stored with ParallelProcessor.set_arguments."
+                (
+                    "ParallelProcessor._create_processes: Processes cannot be created",
+                    " as arguments have not been stored with",
+                    " ParallelProcessor.set_arguments.",
+                )
             )
 
         # Create processes
@@ -319,16 +369,19 @@ class ParallelProcessor:
         }
 
         # Prevent pool from taking new tasks
-        self.pool.close()
+        self._pool.close()
 
-    ############################################################################
+    ####################################################################################
 
     def run(self, progressbar: bool = False, timeout: float = 60.0 * 10):
-        f"""Run worker function {type(self.worker).__name__} in parallel using multiprocessing.Pool and arguments provided ({len(self.ids)} arguments stored).
+        """Run worker function in parallel using multiprocessing.Pool and arguments
+         provided.
 
         Args:
-            progressbar (bool, optional): Whether to or not to display progress using tqdm. Defaults to False.
-            timeout (float, optional): The timeout for each process in seconds. Defaults to 10 minutes.
+            progressbar (bool, optional): Whether to or not to display progress using
+                 tqdm. Defaults to False.
+            timeout (float, optional): The timeout for each process in seconds.
+                 Defaults to 10 minutes.
         """
 
         # Create processes
@@ -339,9 +392,7 @@ class ParallelProcessor:
 
         # Retrieve progressbar function if dependancies are met
         if progressbar:
-            if find_spec("tqdm"):
-                from tqdm import tqdm
-
+            if "tqdm" in sys.modules:
                 progressbar_func = tqdm
             else:
                 print("Could not import tqdm. Basic progressbar will be used.")
@@ -365,25 +416,26 @@ class ParallelProcessor:
         )
 
 
-################################################################################
+########################################################################################
 
 
 class BasicProgressBar:
     """Basic progressbar with no dependancies other than python 3.7+"""
 
-    ############################################################################
+    ####################################################################################
 
     def __init__(self, iterator):
         self.len = len(iterator)
         self.i = 0
+        self.start_time = None
         self._iterator = iterator.__iter__()
 
-    ############################################################################
+    ####################################################################################
 
     def __iter__(self):
         return self
 
-    ############################################################################
+    ####################################################################################
 
     def __next__(self):
 
@@ -403,27 +455,27 @@ class BasicProgressBar:
 
         return next(self._iterator)
 
-    ############################################################################
+    ####################################################################################
 
     def _time_passed(self):
 
         time_passed = time.time() - self.start_time
 
-        h = int(time_passed // 60 ** 2)
-        m = int((time_passed - h * 60 ** 2) // 60)
-        s = time_passed - (h * 60 ** 2 + m * 60)
+        hours = int(time_passed // 60 ** 2)
+        minutes = int((time_passed - hours * 60 ** 2) // 60)
+        seconds = time_passed - (hours * 60 ** 2 + minutes * 60)
 
-        return f"{h} hours {m} minutes {s:.2f} seconds"
+        return f"{hours} hours {minutes} minutes {seconds:.2f} seconds"
 
 
-################################################################################
+########################################################################################
 
 
 def main():
-    pass
+    """Empty function."""
 
 
-################################################################################
+########################################################################################
 
 if __name__ == "__main__":
     main()
