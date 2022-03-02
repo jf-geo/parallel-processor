@@ -22,6 +22,7 @@ from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import AsyncResult
 from typing import Callable, Hashable, Iterable, Tuple, Union, Any
 
+# pylint: disable=import-error
 if find_spec("tqdm"):
     from tqdm import tqdm
 
