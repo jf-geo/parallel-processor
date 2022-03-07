@@ -6,3 +6,4 @@ dependencies:
 - numpy
 - gdal=3.4
 - matplotlib
+- tqdm
