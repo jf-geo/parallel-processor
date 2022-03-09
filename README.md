@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jf-geo/parallel-processor/gdal-example?labpath=examples%2Fgdal-example.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jf-geo/parallel-processor/gdal-example)
 # parallel-processor
  A python class for parallelizing functions across the cores of a single computer. Created with large raster processing jobs in mind. Uses multiprocessing module.
 
