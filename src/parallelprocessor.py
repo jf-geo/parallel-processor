@@ -113,7 +113,8 @@ class ParallelProcessor:
 
     ####################################################################################
 
-    Example 3 - Convert a directory of ECWs to GeoTIFFs using gdal:
+    Example 3 - Convert a directory of ECWs to GeoTIFFs using gdal-python:
+        * Note that
 
     >>> from parallelprocessor import ParallelProcessor
     >>> from osgeo import gdal
@@ -153,6 +154,11 @@ class ParallelProcessor:
 
     >>> results = parallel_processor.results
 
+    >>> # This 'should' bring the gdal dataset objects out of scope which closes them
+    >>> # and writes them to disk. This hasn't been tested yet, so you may want to
+    >>> # use gdal command line via subprocess or rasterio instead.
+    >>> results = None
+
     ####################################################################################
 
     """
@@ -161,7 +167,11 @@ class ParallelProcessor:
     # pylint: disable=expression-not-assigned
     # pylint: disable=consider-using-with
 
-    def __init__(self, worker: Callable = None, threads: int = cpu_count(),) -> None:
+    def __init__(
+        self,
+        worker: Callable = None,
+        threads: int = cpu_count(),
+    ) -> None:
 
         # Set attributes based on __init__ arguments
         self.threads = threads
@@ -299,11 +309,12 @@ class ParallelProcessor:
             )
 
         # Verify func_args &/or func_kwargs are passed
-        if not func_args and not func_kwargs:
+        if not any((func_args, func_kwargs)):
             raise ValueError(
                 (
                     "ParallelProcessor.add_argument: Neither func_args or func_kwargs",
                     " passed. Argument not added.",
+                    " (If passing 0, pass it as a tuple -> (0,))",
                 )
             )
 
@@ -462,9 +473,9 @@ class BasicProgressBar:
 
         time_passed = time.time() - self.start_time
 
-        hours = int(time_passed // 60 ** 2)
-        minutes = int((time_passed - hours * 60 ** 2) // 60)
-        seconds = time_passed - (hours * 60 ** 2 + minutes * 60)
+        hours = int(time_passed // 60**2)
+        minutes = int((time_passed - hours * 60**2) // 60)
+        seconds = time_passed - (hours * 60**2 + minutes * 60)
 
         return f"{hours} hours {minutes} minutes {seconds:.2f} seconds"
 
