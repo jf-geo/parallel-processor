@@ -37,10 +37,10 @@ https://creativecommons.org/licenses/by-nc-sa/4.0/
 Copyright (c) 2022 James Ford
 """
 
-__version__ = "1.0.0"
+__version__ = "0.2.0"
 __maintainer__ = "James Ford"
 __email__ = "irvine.ford@gmail.com"
-__status__ = "Prod"
+__status__ = "Dev"
 
 ########################################################################################
 
@@ -468,15 +468,7 @@ class BasicProgressBar:
 
         return f"{hours} hours {minutes} minutes {seconds:.2f} seconds"
 
-
-########################################################################################
-
-
-def main():
-    """Empty function."""
-
-
 ########################################################################################
 
 if __name__ == "__main__":
-    main()
+    pass
