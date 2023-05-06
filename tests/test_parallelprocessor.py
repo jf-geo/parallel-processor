@@ -1,4 +1,4 @@
-"""Tests for parallelprocessor.py"""
+"""Tests for parallel_processor.py"""
 
 import os
 import re
@@ -18,11 +18,6 @@ from io import StringIO
 # pylint: disable=wrong-import-position
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
-
-# Add src directory to sys.path
-sys.path.insert(
-    1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
-)
 
 ########################################################################################
 
@@ -67,7 +62,7 @@ def test_parallelprocessor_import_2():
     """Test that BasicProgressBar can be imported without errors."""
 
     try:
-        from parallelprocessor import BasicProgressBar
+        from parallel_processor import BasicProgressBar
 
         result = True
 
@@ -84,7 +79,7 @@ def test_parallelprocessor_import_3():
     """Test that ParallelProcessor can be imported without errors."""
 
     try:
-        from parallelprocessor import ParallelProcessor
+        from parallel_processor import ParallelProcessor
 
         result = True
 
@@ -97,7 +92,7 @@ def test_parallelprocessor_import_3():
 ########################################################################################
 
 # Import classes to test
-from parallelprocessor import ParallelProcessor, BasicProgressBar
+from parallel_processor import ParallelProcessor, BasicProgressBar
 
 ########################################################################################
 
